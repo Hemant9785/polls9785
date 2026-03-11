@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Clock, BarChart3, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { useSocket } from './SocketProvider';
+import { useSupabase } from './SupabaseProvider';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Option, Poll } from '@/types';
@@ -25,7 +25,7 @@ export default function PollCard({ initialPoll }: PollCardProps) {
     const [isVoted, setIsVoted] = useState(false);
     const [isVoting, setIsVoting] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { socket } = useSocket();
+    const { supabase } = useSupabase();
 
     const fetchPoll = useCallback(async () => {
         try {
@@ -40,19 +40,25 @@ export default function PollCard({ initialPoll }: PollCardProps) {
     }, [poll.id]);
 
     useEffect(() => {
-        if (!socket) return;
+        if (!supabase) return;
 
-        const handleUpdate = (data: { pollId: string }) => {
-            if (data.pollId === poll.id) {
-                fetchPoll();
-            }
-        };
+        const channel = supabase
+            .channel(`poll_updates_${poll.id}`)
+            .on(
+                'broadcast',
+                { event: 'pollUpdated' },
+                (payload) => {
+                    if (payload.payload.pollId === poll.id) {
+                        fetchPoll();
+                    }
+                }
+            )
+            .subscribe();
 
-        socket.on('pollUpdated', handleUpdate);
         return () => {
-            socket.off('pollUpdated', handleUpdate);
+            supabase.removeChannel(channel);
         };
-    }, [socket, poll.id, fetchPoll]);
+    }, [supabase, poll.id, fetchPoll]);
 
     const handleVote = async (optionId: string) => {
         if (isVoting || isVoted || !poll.isActive) return;
@@ -178,7 +184,7 @@ export default function PollCard({ initialPoll }: PollCardProps) {
                 )}
 
                 {isVoted && !error && (
-                    <div className="flex items-center gap-1 text-[11px] font-medium text-green-600 uppercase tracking-tight">
+                    <div className="flex items-center gap-1 text-[11px] font-medium text-green-600 uppercase tracking-tight" >
                         <CheckCircle2 className="h-3 w-3" />
                         Voted
                     </div>

@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import PageHeader from "@/components/PageHeader";
+import SupabaseProvider from "@/components/SupabaseProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "PolliSphere | Political Polling Platform",
-    description: "A modern, transparent platform for tracking political sentiment and engagement.",
+    title: 'Verdict | Public Sentiment Platform',
+    description: 'Vote on public sentiment for profiles in real-time.',
 };
-
-import { SocketProvider } from "@/components/SocketProvider";
 
 export default function RootLayout({
     children,
@@ -19,16 +18,18 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className="h-full">
-            <body className={`${inter.className} min-h-screen bg-gray-50 text-gray-900`}>
-                <SocketProvider>
+            <body className={`${inter.className} min-h-screen bg-transparent text-gray-900`}>
+                <SupabaseProvider>
                     <PageHeader />
-                    <main>{children}</main>
+                    <main className="min-h-screen bg-gray-50/50">
+                        {children}
+                    </main>
                     <footer className="mt-20 border-t bg-white py-12">
                         <div className="container mx-auto px-4 text-center text-sm text-gray-500">
-                            © {new Date().getFullYear()} PolliSphere. Built with Next.js & TailwindCSS.
+                            © {new Date().getFullYear()} Verdict. Built with Next.js & TailwindCSS.
                         </div>
                     </footer>
-                </SocketProvider>
+                </SupabaseProvider>
             </body>
         </html>
     );

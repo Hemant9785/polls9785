@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import requestIp from 'request-ip';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(
     request: Request,
@@ -56,26 +57,17 @@ export async function POST(
             }
         });
 
-        // Notify via socket (triggering a broadcast from the server)
-        // We'll need a way to tell the socket server to emit.
-        // In a serverless/worker environment, we might use a webhook or a shared store.
-        // Since this is Next.js, we can try to hit the socket initialization route or similar.
-        // For now, let's assume we'll trigger it via a separate internal call or use a pub/sub.
-
-        // Simplest approach for this demo:
-        // If the socket server is running in-process, we can try to access it.
-        // But in App Router, the API routes are isolated.
-        // We can use an internal API call to the Pages route to emit the event.
-
+        // Notify via Supabase Realtime
         try {
-            const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-            await fetch(`${siteUrl}/api/socket/emit`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ event: 'pollUpdated', data: { pollId } })
+            const channel = supabase.channel(`poll_updates_${pollId}`);
+            await channel.send({
+                type: 'broadcast',
+                event: 'pollUpdated',
+                payload: { pollId }
             });
+            await supabase.removeChannel(channel);
         } catch (e) {
-            console.warn('Socket emit failed', e);
+            console.warn('Supabase Realtime broadcast failed', e);
         }
 
         return NextResponse.json(vote);
