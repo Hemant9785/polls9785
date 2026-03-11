@@ -3,6 +3,8 @@ import ProfileCard from "@/components/ProfileCard";
 import { PlusCircle, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 async function getProfileStats() {
     const profiles = await prisma.profile.findMany({
         include: {
@@ -17,8 +19,8 @@ async function getProfileStats() {
     });
 
     return profiles.map(p => {
-        const totalVotes = p.polls.reduce((acc, poll) => acc + (poll._count?.votes || 0), 0);
-        const activePolls = p.polls.filter(poll => poll.isActive && new Date() < new Date(poll.expiresAt)).length;
+        const totalVotes = p.polls.reduce((acc: number, poll: any) => acc + (poll._count?.votes || 0), 0);
+        const activePolls = p.polls.filter((poll: any) => poll.isActive && new Date() < new Date(poll.expiresAt)).length;
 
         return {
             ...p,
@@ -75,7 +77,7 @@ export default async function HomePage() {
 
             <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
                 {profileStats.map((profile) => (
-                    <ProfileCard key={profile.id} profile={profile} />
+                    <ProfileCard key={profile.id} profile={profile as any} />
                 ))}
             </div>
         </div>
