@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
+
+export const dynamic = "force-dynamic";
 import PollCard from '@/components/PollCard';
 import CreatePollForm from '@/components/CreatePollForm';
 import { PlusCircle, History, User } from 'lucide-react';
