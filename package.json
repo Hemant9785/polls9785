@@ -1,0 +1,44 @@
+{
+  "name": "modig",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.5.0",
+    "@prisma/client": "^6.19.2",
+    "better-sqlite3": "^12.6.2",
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.19",
+    "lucide-react": "^0.477.0",
+    "next": "14.2.24",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "request-ip": "^3.3.0",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "tailwind-merge": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^20.17.14",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/request-ip": "^0.0.41",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "14.2.24",
+    "postcss": "^8.4.49",
+    "prisma": "^6.19.2",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
+  }
+}
