@@ -17,13 +17,22 @@ export async function GET() {
     }
 }
 
+import { auth } from '@/lib/auth';
+
 export async function POST(request: Request) {
+    const session = await auth();
+
+    if (!session || !session.user?.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const body = await request.json();
         const { name, category, description, image } = body;
 
         const profile = await prisma.profile.create({
             data: {
+                userId: session.user.id,
                 name,
                 category,
                 description,

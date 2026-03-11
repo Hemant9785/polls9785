@@ -2,33 +2,42 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import requestIp from 'request-ip';
 import { supabase } from '@/lib/supabase';
+import { auth } from '@/lib/auth';
 
 export async function POST(
     request: Request,
     { params }: { params: { id: string } }
 ) {
     const pollId = params.id;
+    const session = await auth();
+
+    if (!session || !session.user?.id) {
+        return NextResponse.json({ error: 'You must be signed in to vote' }, { status: 401 });
+    }
+
+    const userId = session.user.id;
 
     try {
         const body = await request.json();
         const { optionId, fingerprint } = body;
 
-        // Get IP address
+        // Get IP address for audit/logging
         const headers = Object.fromEntries(request.headers.entries());
         const ip = requestIp.getClientIp({ headers } as any) || 'unknown';
         const userAgent = request.headers.get('user-agent') || 'unknown';
 
-        // Duplicate check
-        const existingVote = await prisma.vote.findFirst({
+        // Duplicate check using User ID
+        const existingVote = await prisma.vote.findUnique({
             where: {
-                pollId,
-                ipAddress: ip,
-                userAgent,
+                pollId_userId: {
+                    pollId,
+                    userId,
+                }
             }
         });
 
         if (existingVote) {
-            return NextResponse.json({ error: 'Already voted from this device/IP' }, { status: 403 });
+            return NextResponse.json({ error: 'You have already voted on this poll' }, { status: 403 });
         }
 
         // Check if poll is active
@@ -50,6 +59,7 @@ export async function POST(
         const vote = await prisma.vote.create({
             data: {
                 pollId,
+                userId,
                 optionId,
                 ipAddress: ip,
                 userAgent,

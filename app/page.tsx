@@ -1,13 +1,14 @@
 import prisma from "@/lib/prisma";
 import ProfileCard from "@/components/ProfileCard";
-import { PlusCircle, TrendingUp, AlertTriangle } from "lucide-react";
+import { PlusCircle, TrendingUp, AlertTriangle, LogIn } from "lucide-react";
 import Link from "next/link";
+import { auth } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 async function getProfileStats() {
     try {
-        const profiles = await prisma.profile.findMany({
+        const profiles = await (prisma as any).profile.findMany({
             include: {
                 polls: {
                     include: {
@@ -19,7 +20,7 @@ async function getProfileStats() {
             }
         });
 
-        return profiles.map(p => {
+        return (profiles as any[]).map((p: any) => {
             const totalVotes = p.polls?.reduce((acc: number, poll: any) => acc + (poll._count?.votes || 0), 0) || 0;
             const activePolls = p.polls?.filter((poll: any) => poll.isActive && new Date() < new Date(poll.expiresAt)).length || 0;
 
@@ -36,6 +37,7 @@ async function getProfileStats() {
 }
 
 export default async function HomePage() {
+    const session = await auth();
     const profileStats = await getProfileStats();
 
     if (profileStats === null) {
@@ -72,17 +74,35 @@ export default async function HomePage() {
                     Participate in the democratic process. Explore leaders, track sentiment, and make your voice heard in real-time.
                 </p>
 
+                {!session && (
+                    <div className="mt-10 flex items-center justify-center gap-4">
+                        <Link
+                            href="/auth/register"
+                            className="rounded-2xl bg-blue-600 px-8 py-4 text-sm font-black text-white shadow-xl shadow-blue-200 transition-all hover:bg-blue-700 hover:shadow-2xl active:scale-[0.98]"
+                        >
+                            Join the Verdict
+                        </Link>
+                        <Link
+                            href="/auth/login"
+                            className="flex items-center gap-2 rounded-2xl bg-white border-2 border-gray-100 px-8 py-4 text-sm font-black text-gray-900 transition-all hover:bg-gray-50 hover:border-gray-200 active:scale-[0.98]"
+                        >
+                            <LogIn className="h-4 w-4 text-blue-600" />
+                            Sign In
+                        </Link>
+                    </div>
+                )}
+
                 <div className="mt-10 flex items-center justify-center gap-12 border-y bg-white/50 py-8 backdrop-blur-sm">
                     <div className="text-center">
                         <p className="text-3xl font-black text-gray-900">
-                            {profileStats.reduce((acc, p) => acc + p.totalVotes, 0).toLocaleString()}
+                            {profileStats.reduce((acc: number, p: any) => acc + p.totalVotes, 0).toLocaleString()}
                         </p>
                         <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">Total Votes Cast</p>
                     </div>
                     <div className="h-10 w-px bg-gray-200" />
                     <div className="text-center">
                         <p className="text-3xl font-black text-gray-900">
-                            {profileStats.reduce((acc, p) => acc + p.activePolls, 0)}
+                            {profileStats.reduce((acc: number, p: any) => acc + p.activePolls, 0)}
                         </p>
                         <p className="mt-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">Active Polls</p>
                     </div>
@@ -102,7 +122,7 @@ export default async function HomePage() {
 
             {profileStats.length > 0 ? (
                 <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
-                    {profileStats.map((profile) => (
+                    {profileStats.map((profile: any) => (
                         <ProfileCard key={profile.id} profile={profile as any} />
                     ))}
                 </div>

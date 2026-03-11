@@ -30,13 +30,22 @@ export async function GET(request: Request) {
     }
 }
 
+import { auth } from '@/lib/auth';
+
 export async function POST(request: Request) {
+    const session = await auth();
+
+    if (!session || !session.user?.id) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     try {
         const body = await request.json();
         const { profileId, question, options, expiresAt } = body;
 
         const poll = await prisma.poll.create({
             data: {
+                userId: session.user.id,
                 profileId,
                 question,
                 expiresAt: new Date(expiresAt),

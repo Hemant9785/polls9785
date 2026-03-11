@@ -10,8 +10,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String
+  profiles      Profile[]
+  polls         Poll[]
+  votes         Vote[]
+  createdAt     DateTime  @default(now())
+}
+
 model Profile {
   id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
   name        String
   category    String
   image       String
@@ -21,6 +34,8 @@ model Profile {
 
 model Poll {
   id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
   profileId    String
   profile      Profile    @relation(fields: [profileId], references: [id])
   question     String
@@ -41,6 +56,8 @@ model Option {
 
 model Vote {
   id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
   pollId        String
   poll          Poll     @relation(fields: [pollId], references: [id])
   optionId      String
@@ -50,5 +67,5 @@ model Vote {
   fingerprint   String?
   createdAt     DateTime @default(now())
 
-  @@unique([pollId, ipAddress, userAgent])
+  @@unique([pollId, userId])
 }

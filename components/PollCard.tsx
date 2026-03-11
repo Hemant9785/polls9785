@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Clock, BarChart3, ChevronRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Clock, BarChart3, ChevronRight, CheckCircle2, AlertCircle, LogIn } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { useSupabase } from './SupabaseProvider';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Option, Poll } from '@/types';
@@ -26,6 +28,9 @@ export default function PollCard({ initialPoll }: PollCardProps) {
     const [isVoting, setIsVoting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { supabase } = useSupabase();
+    const { data: session } = useSession();
+
+    const isGuest = !session?.user;
 
     const fetchPoll = useCallback(async () => {
         try {
@@ -167,28 +172,47 @@ export default function PollCard({ initialPoll }: PollCardProps) {
                 })}
             </div>
 
-            <div className="mt-8 flex items-center justify-between border-t pt-4">
-                <div className="flex items-center gap-2 text-[12px] font-medium text-gray-400">
-                    <BarChart3 className="h-3.5 w-3.5 text-gray-400" />
-                    <span className="flex items-center gap-1">
-                        <strong className="text-gray-600">{totalVotes.toLocaleString()}</strong>
-                        total votes
-                    </span>
+            <div className="mt-8 flex flex-col gap-4 border-t pt-4">
+                {isGuest && isActive && !isVoted && (
+                    <div className="flex items-center justify-between rounded-xl bg-blue-50/50 p-4 border border-blue-100/50">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                                <LogIn className="h-4 w-4" />
+                            </div>
+                            <p className="text-sm font-bold text-blue-900">Sign in to cast your vote</p>
+                        </div>
+                        <Link
+                            href="/auth/login"
+                            className="text-sm font-black text-blue-600 hover:text-blue-700 transition-colors"
+                        >
+                            Sign In
+                        </Link>
+                    </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[12px] font-medium text-gray-400">
+                        <BarChart3 className="h-3.5 w-3.5 text-gray-400" />
+                        <span className="flex items-center gap-1">
+                            <strong className="text-gray-600">{totalVotes.toLocaleString()}</strong>
+                            total votes
+                        </span>
+                    </div>
+
+                    {error && (
+                        <div className="flex items-center gap-1 text-[11px] font-medium text-red-500 animate-in fade-in slide-in-from-right-2">
+                            <AlertCircle className="h-3 w-3" />
+                            {error}
+                        </div>
+                    )}
+
+                    {isVoted && !error && (
+                        <div className="flex items-center gap-1 text-[11px] font-medium text-green-600 uppercase tracking-tight" >
+                            <CheckCircle2 className="h-3 w-3" />
+                            Voted
+                        </div>
+                    )}
                 </div>
-
-                {error && (
-                    <div className="flex items-center gap-1 text-[11px] font-medium text-red-500 animate-in fade-in slide-in-from-right-2">
-                        <AlertCircle className="h-3 w-3" />
-                        {error}
-                    </div>
-                )}
-
-                {isVoted && !error && (
-                    <div className="flex items-center gap-1 text-[11px] font-medium text-green-600 uppercase tracking-tight" >
-                        <CheckCircle2 className="h-3 w-3" />
-                        Voted
-                    </div>
-                )}
             </div>
         </div>
     );
